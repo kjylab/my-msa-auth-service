@@ -1,10 +1,9 @@
 package dev.ktcloud.black.authservice.adapter.inbound.grpc
 
-import dev.ktcloud.black.auth.application.port.inbound.CheckValidityUseCase
+import dev.ktcloud.black.auth.application.port.inbound.CheckValidityQuery
 import dev.ktcloud.black.auth.application.port.inbound.CreateUserCommand
-import dev.ktcloud.black.auth.application.port.inbound.CreateUserUseCase
+import dev.ktcloud.black.auth.application.port.inbound.ReissueTokenCommand
 import dev.ktcloud.black.auth.application.port.inbound.SignInCommand
-import dev.ktcloud.black.auth.application.port.inbound.SignInUseCase
 import dev.ktcloud.black.auth.domain.exception.AuthException
 import dev.ktcloud.black.auth.grpc.AuthServiceGrpc
 import dev.ktcloud.black.auth.grpc.CheckValidityRequest
@@ -20,19 +19,15 @@ import net.devh.boot.grpc.server.service.GrpcService
 
 @GrpcService
 class AuthGrpcAdapter(
-    private val signInUseCase: SignInUseCase,
-    private val createUserUseCase: CreateUserUseCase,
-    private val checkValidityUseCase: CheckValidityUseCase,
+    private val signInCommand: SignInCommand,
+    private val createUserCommand: CreateUserCommand,
+    private val checkValidityQuery: CheckValidityQuery,
 ) : AuthServiceGrpc.AuthServiceImplBase() {
 
     override fun signUp(request: SignUpRequest, responseObserver: StreamObserver<Empty>) {
         try {
-            createUserUseCase.createUser(
-                CreateUserCommand(
-                    email = request.email,
-                    rawPassword = request.plainPassword,
-                    name = request.name,
-                )
+            createUserCommand.createUser(
+                CreateUserCommand.In(email = request.email, rawPassword = request.plainPassword, name = request.name)
             )
             responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
@@ -45,14 +40,12 @@ class AuthGrpcAdapter(
 
     override fun signIn(request: SignInRequest, responseObserver: StreamObserver<SignInResponse>) {
         try {
-            val pair = signInUseCase.signIn(SignInCommand(request.email, request.plainPassword))
+            val out = signInCommand.signIn(SignInCommand.In(email = request.email, password = request.plainPassword))
             val response = SignInResponse.newBuilder()
-                .setToken(
-                    TokenResponseDto.newBuilder()
-                        .setAccessToken(pair.accessToken)
-                        .setRefreshToken(pair.refreshToken)
-                        .build()
-                )
+                .setToken(TokenResponseDto.newBuilder()
+                    .setAccessToken(out.token.accessToken)
+                    .setRefreshToken(out.token.refreshToken)
+                    .build())
                 .build()
             responseObserver.onNext(response)
             responseObserver.onCompleted()
@@ -65,11 +58,9 @@ class AuthGrpcAdapter(
 
     override fun checkValidity(request: CheckValidityRequest, responseObserver: StreamObserver<UserResponseDto>) {
         try {
-            val claims = checkValidityUseCase.checkValidity(request.accessToken)
+            val out = checkValidityQuery.checkValidity(CheckValidityQuery.In(request.accessToken))
             val response = UserResponseDto.newBuilder()
-                .setId(claims.userId.toString())
-                .setEmail(claims.email)
-                .setRole(claims.role.name)
+                .setId(out.id).setEmail(out.email).setRole(out.role).setName(out.name)
                 .build()
             responseObserver.onNext(response)
             responseObserver.onCompleted()

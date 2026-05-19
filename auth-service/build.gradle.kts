@@ -19,6 +19,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    runtimeOnly("org.postgresql:postgresql")
 
     // gRPC
     implementation("net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE")
@@ -28,17 +29,6 @@ dependencies {
     implementation("io.grpc:grpc-stub:${Versions.GRPC}")
     implementation("io.grpc:grpc-kotlin-stub:${Versions.GRPC_KOTLIN}")
     implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC}")
-
-    // Security (BCryptPasswordEncoder bean)
-    implementation("org.springframework.security:spring-security-crypto")
-
-    // JPA + PostgreSQL + Flyway
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-database-postgresql")
-
-    // Redis
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     // Tracing
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
@@ -59,26 +49,15 @@ sourceSets {
 }
 
 protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:${Versions.PROTOBUF}"
-    }
+    protoc { artifact = "com.google.protobuf:protoc:${Versions.PROTOBUF}" }
     plugins {
-        id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:${Versions.GRPC}"
-        }
-        id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:${Versions.GRPC_KOTLIN}:jdk8@jar"
-        }
+        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:${Versions.GRPC}" }
+        id("grpckt") { artifact = "io.grpc:protoc-gen-grpc-kotlin:${Versions.GRPC_KOTLIN}:jdk8@jar" }
     }
     generateProtoTasks {
         all().forEach { task ->
-            task.builtins {
-                id("kotlin")
-            }
-            task.plugins {
-                id("grpc")
-                id("grpckt")
-            }
+            task.builtins { id("kotlin") }
+            task.plugins { id("grpc"); id("grpckt") }
         }
     }
 }

@@ -1,55 +1,51 @@
 package dev.ktcloud.black.auth.application.service
 
+import dev.ktcloud.black.auth.application.port.cache.outbound.AuthCacheCommandOutbound
+import dev.ktcloud.black.auth.application.port.cache.outbound.AuthCacheQueryOutbound
 import dev.ktcloud.black.auth.application.port.inbound.CreateUserCommand
-import dev.ktcloud.black.auth.application.port.inbound.CreateUserUseCase
-import dev.ktcloud.black.auth.application.port.inbound.ReissueTokenUseCase
+import dev.ktcloud.black.auth.application.port.inbound.ReissueTokenCommand
 import dev.ktcloud.black.auth.application.port.inbound.SignInCommand
-import dev.ktcloud.black.auth.application.port.inbound.SignInUseCase
-import dev.ktcloud.black.auth.application.port.outbound.AuthCacheCommandPort
-import dev.ktcloud.black.auth.application.port.outbound.AuthCacheQueryPort
 import dev.ktcloud.black.auth.application.port.outbound.UserCommandPort
 import dev.ktcloud.black.auth.application.port.outbound.UserQueryPort
+import dev.ktcloud.black.auth.application.service.jwt.JwtGenerator
+import dev.ktcloud.black.auth.application.service.jwt.JwtResolver
+import dev.ktcloud.black.auth.domain.entity.JwtToken
 import dev.ktcloud.black.auth.domain.entity.UserEntity
 import dev.ktcloud.black.auth.domain.exception.AuthException
-import dev.ktcloud.black.auth.domain.jwt.JwtGenerator
-import dev.ktcloud.black.auth.domain.jwt.JwtResolver
-import dev.ktcloud.black.auth.domain.vo.TokenPair
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
 class AuthCommandService(
     private val userQueryPort: UserQueryPort,
     private val userCommandPort: UserCommandPort,
-    private val authCacheQueryPort: AuthCacheQueryPort,
-    private val authCacheCommandPort: AuthCacheCommandPort,
+    private val authCacheQueryOutbound: AuthCacheQueryOutbound,
+    private val authCacheCommandOutbound: AuthCacheCommandOutbound,
     private val jwtGenerator: JwtGenerator,
     private val jwtResolver: JwtResolver,
     private val passwordEncoder: PasswordEncoder,
-) : SignInUseCase, CreateUserUseCase, ReissueTokenUseCase {
+) : SignInCommand, CreateUserCommand, ReissueTokenCommand {
 
-    override fun signIn(command: SignInCommand): TokenPair {
+    @Transactional
+    override fun signIn(command: SignInCommand.In): SignInCommand.Out {
         val user = userQueryPort.findByEmail(command.email)
             ?: throw AuthException.InvalidCredentials()
 
-        if (!passwordEncoder.matches(command.rawPassword, user.password)) {
+        if (!passwordEncoder.matches(command.password, user.password))
             throw AuthException.InvalidCredentials()
-        }
 
-        val tokenPair = jwtGenerator.generate(user)
-        authCacheCommandPort.saveRefreshToken(
-            userId = user.id,
-            refreshToken = tokenPair.refreshToken,
-            ttlSeconds = jwtGenerator.refreshTokenExpirySeconds(),
-        )
-        return tokenPair
+        val token = jwtGenerator.generate(user)
+        authCacheCommandOutbound.saveRefreshToken(user.id.toString(), token.refreshToken)
+
+        return SignInCommand.Out(token = token)
     }
 
-    override fun createUser(command: CreateUserCommand): UUID {
-        if (userQueryPort.existsByEmail(command.email)) {
+    @Transactional
+    override fun createUser(command: CreateUserCommand.In): UUID {
+        if (userQueryPort.existsByEmail(command.email))
             throw AuthException.UserAlreadyExists()
-        }
 
         val user = UserEntity(
             email = command.email,
@@ -60,22 +56,22 @@ class AuthCommandService(
         return userCommandPort.save(user).id
     }
 
-    override fun reissueToken(refreshToken: String): TokenPair {
-        val claims = jwtResolver.resolve(refreshToken)
-        val stored = authCacheQueryPort.getRefreshToken(claims.userId)
-            ?: throw AuthException.InvalidToken()
+    @Transactional
+    override fun reissueToken(command: ReissueTokenCommand.In): JwtToken {
+        val claims = jwtResolver.validateToken(command.refreshToken)
 
-        if (stored != refreshToken) throw AuthException.InvalidToken()
+        val stored = authCacheQueryOutbound.getRefreshToken(claims.userId.toString())
+        if (stored != command.refreshToken) {
+            authCacheCommandOutbound.deleteRefreshToken(claims.userId.toString())
+            throw AuthException.InvalidToken()
+        }
 
         val user = userQueryPort.findById(claims.userId)
             ?: throw AuthException.UserNotFound()
 
-        val newPair = jwtGenerator.generate(user)
-        authCacheCommandPort.saveRefreshToken(
-            userId = user.id,
-            refreshToken = newPair.refreshToken,
-            ttlSeconds = jwtGenerator.refreshTokenExpirySeconds(),
-        )
-        return newPair
+        val newToken = jwtGenerator.generate(user)
+        authCacheCommandOutbound.saveRefreshToken(user.id.toString(), newToken.refreshToken)
+
+        return newToken
     }
 }

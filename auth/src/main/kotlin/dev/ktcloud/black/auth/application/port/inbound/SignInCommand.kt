@@ -1,12 +1,10 @@
 package dev.ktcloud.black.auth.application.port.inbound
 
-import dev.ktcloud.black.auth.domain.vo.TokenPair
+import dev.ktcloud.black.auth.domain.entity.JwtToken
 
-interface SignInUseCase {
-    fun signIn(command: SignInCommand): TokenPair
+interface SignInCommand {
+    fun signIn(command: In): Out
+
+    data class In(val email: String, val password: String)
+    data class Out(val token: JwtToken)
 }
-
-data class SignInCommand(
-    val email: String,
-    val rawPassword: String,
-)

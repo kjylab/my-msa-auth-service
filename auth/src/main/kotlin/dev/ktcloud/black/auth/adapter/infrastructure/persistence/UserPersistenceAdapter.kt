@@ -1,10 +1,10 @@
-package dev.ktcloud.black.authservice.adapter.outbound.persistence
+package dev.ktcloud.black.auth.adapter.infrastructure.persistence
 
+import dev.ktcloud.black.auth.adapter.infrastructure.persistence.entity.UserJpaEntity
+import dev.ktcloud.black.auth.adapter.infrastructure.persistence.repository.UserJpaRepository
 import dev.ktcloud.black.auth.application.port.outbound.UserCommandPort
 import dev.ktcloud.black.auth.application.port.outbound.UserQueryPort
 import dev.ktcloud.black.auth.domain.entity.UserEntity
-import dev.ktcloud.black.authservice.adapter.outbound.persistence.entity.UserJpaEntity
-import dev.ktcloud.black.authservice.adapter.outbound.persistence.repository.UserJpaRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 

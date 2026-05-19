@@ -1,7 +1,8 @@
 package dev.ktcloud.black.auth.application.port.inbound
 
-import dev.ktcloud.black.auth.domain.vo.TokenClaims
+interface CheckValidityQuery {
+    fun checkValidity(query: In): Out
 
-interface CheckValidityUseCase {
-    fun checkValidity(accessToken: String): TokenClaims
+    data class In(val accessToken: String)
+    data class Out(val id: String, val email: String, val role: String, val name: String)
 }
