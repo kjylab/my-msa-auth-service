@@ -29,6 +29,9 @@ dependencies {
     implementation("io.grpc:grpc-kotlin-stub:${Versions.GRPC_KOTLIN}")
     implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC}")
 
+    // Security (BCryptPasswordEncoder bean)
+    implementation("org.springframework.security:spring-security-crypto")
+
     // JPA + PostgreSQL + Flyway
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("org.postgresql:postgresql")

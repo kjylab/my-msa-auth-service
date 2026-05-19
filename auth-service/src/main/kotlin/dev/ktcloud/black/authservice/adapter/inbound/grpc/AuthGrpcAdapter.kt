@@ -1,19 +1,19 @@
 package dev.ktcloud.black.authservice.adapter.inbound.grpc
 
-import auth.service.AuthServiceGrpc
-import auth.service.CheckValidityRequest
-import auth.service.Empty
-import auth.service.SignInRequest
-import auth.service.SignInResponse
-import auth.service.SignUpRequest
-import auth.service.TokenResponseDto
-import auth.service.UserResponseDto
 import dev.ktcloud.black.auth.application.port.inbound.CheckValidityUseCase
 import dev.ktcloud.black.auth.application.port.inbound.CreateUserCommand
 import dev.ktcloud.black.auth.application.port.inbound.CreateUserUseCase
 import dev.ktcloud.black.auth.application.port.inbound.SignInCommand
 import dev.ktcloud.black.auth.application.port.inbound.SignInUseCase
 import dev.ktcloud.black.auth.domain.exception.AuthException
+import dev.ktcloud.black.auth.grpc.AuthServiceGrpc
+import dev.ktcloud.black.auth.grpc.CheckValidityRequest
+import dev.ktcloud.black.auth.grpc.Empty
+import dev.ktcloud.black.auth.grpc.SignInRequest
+import dev.ktcloud.black.auth.grpc.SignInResponse
+import dev.ktcloud.black.auth.grpc.SignUpRequest
+import dev.ktcloud.black.auth.grpc.TokenResponseDto
+import dev.ktcloud.black.auth.grpc.UserResponseDto
 import io.grpc.Status
 import io.grpc.stub.StreamObserver
 import net.devh.boot.grpc.server.service.GrpcService
