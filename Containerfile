@@ -5,6 +5,7 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
+COPY gradle.properties .
 
 COPY auth/build.gradle.kts auth/
 COPY auth-service/build.gradle.kts auth-service/
