@@ -1,29 +1,23 @@
-FROM eclipse-temurin:21.0.9_10-jdk-jammy AS build
+# CI에서 ./gradlew :auth-service:bootJar 를 먼저 실행 후 Docker 빌드
+# Docker는 레이어 추출 + 런타임 패키징만 담당
+
+# ===== Stage 1: layered jar extraction =====
+FROM eclipse-temurin:21-jre-alpine AS layers
+WORKDIR /app
+COPY auth-service/build/libs/*.jar app.jar
+RUN java -Djarmode=layertools -jar app.jar extract
+
+# ===== Stage 2: runtime =====
+FROM eclipse-temurin:21-jre-alpine
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
 WORKDIR /app
 
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-COPY gradle.properties .
-
-COPY auth/build.gradle.kts auth/
-COPY auth-service/build.gradle.kts auth-service/
-
-RUN ./gradlew dependencies --no-daemon -Pkotlin.incremental=false
-
-COPY . .
-
-RUN ./gradlew :auth-service:bootJar -x test --no-daemon -Pkotlin.incremental=false
-
-FROM eclipse-temurin:21.0.9_10-jre-jammy
-WORKDIR /app
-
-RUN useradd -ms /bin/bash springuser
-USER springuser
-
-COPY --from=build /app/auth-service/build/libs/auth-service.jar app.jar
-
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=staging", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "app.jar"]
+COPY --from=layers /app/dependencies/ ./
+COPY --from=layers /app/spring-boot-loader/ ./
+COPY --from=layers /app/snapshot-dependencies/ ./
+COPY --from=layers /app/application/ ./
 
 EXPOSE 8080 9090
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]

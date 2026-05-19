@@ -1,12 +1,11 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
-    kotlin("jvm") version "2.3.20" apply false
-    kotlin("plugin.spring") version "2.3.20" apply false
-    kotlin("plugin.jpa") version "2.3.20" apply false
+    kotlin("jvm") version "2.1.0" apply false
+    kotlin("plugin.spring") version "2.1.0" apply false
+    kotlin("plugin.jpa") version "2.1.0" apply false
     id("org.springframework.boot") version "3.4.5" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
-    id("com.google.protobuf") version "0.10.0" apply false
 }
 
 allprojects {
@@ -37,12 +36,6 @@ subprojects {
         imports {
             mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.5")
         }
-        dependencies {
-            dependency("org.jetbrains.kotlin:kotlin-reflect:2.3.20")
-            dependency("org.jetbrains.kotlin:kotlin-stdlib:2.3.20")
-            dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.20")
-            dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.3.20")
-        }
     }
 
     dependencies {
@@ -51,8 +44,4 @@ subprojects {
     }
 
     tasks.withType<Test>().configureEach { useJUnitPlatform() }
-}
-
-project(":auth-service") {
-    apply(plugin = "com.google.protobuf")
 }
