@@ -10,11 +10,11 @@ COPY gradle.properties .
 COPY auth/build.gradle.kts auth/
 COPY auth-service/build.gradle.kts auth-service/
 
-RUN ./gradlew dependencies --no-daemon
+RUN ./gradlew dependencies --no-daemon -Pkotlin.incremental=false
 
 COPY . .
 
-RUN ./gradlew :auth-service:bootJar -x test --no-daemon
+RUN ./gradlew :auth-service:bootJar -x test --no-daemon -Pkotlin.incremental=false
 
 FROM eclipse-temurin:21.0.9_10-jre-jammy
 WORKDIR /app
