@@ -1,6 +1,13 @@
+object Versions {
+    const val GRPC = "4.34.1"
+    const val GRPC_KOTLIN = "1.4.1"
+    const val GRPC_PROTO = "1.80.0"
+}
+
 plugins {
     id("org.springframework.boot")
     kotlin("plugin.jpa")
+    id("com.google.protobuf")
 }
 
 dependencies {
@@ -11,6 +18,11 @@ dependencies {
 
     // gRPC
     implementation("net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE")
+    implementation("com.google.protobuf:protobuf-kotlin:${Versions.GRPC}")
+    implementation("io.grpc:grpc-kotlin-stub:${Versions.GRPC_KOTLIN}")
+    implementation("io.grpc:grpc-protobuf:${Versions.GRPC_PROTO}")
+    implementation("io.grpc:grpc-stub:${Versions.GRPC_PROTO}")
+    implementation("io.grpc:grpc-netty-shaded:${Versions.GRPC_PROTO}")
 
     // JPA + PostgreSQL + Flyway
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -27,12 +39,6 @@ dependencies {
     // Tracing
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-
-    // Proto
-    implementation("com.google.protobuf:protobuf-java:3.25.3")
-    implementation("io.grpc:grpc-stub:1.62.2")
-    implementation("io.grpc:grpc-protobuf:1.62.2")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
 }
 
 tasks.bootJar {
@@ -44,20 +50,33 @@ sourceSets {
         java {
             srcDirs(
                 "build/generated/source/proto/main/java",
-                "build/generated/source/proto/main/grpc",
+                "build/generated/source/proto/main/kotlin",
             )
         }
     }
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.25.3" }
+    protoc {
+        artifact = "com.google.protobuf:protoc:${Versions.GRPC}"
+    }
     plugins {
-        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:1.62.2" }
+        register("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:${Versions.GRPC_PROTO}"
+        }
+        register("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:${Versions.GRPC_KOTLIN}:jdk8@jar"
+        }
     }
     generateProtoTasks {
         all().forEach {
-            it.plugins { id("grpc") }
+            it.plugins {
+                register("grpc")
+                register("grpckt")
+            }
+            it.builtins {
+                register("kotlin")
+            }
         }
     }
 }
