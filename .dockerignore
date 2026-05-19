@@ -1,0 +1,26 @@
+# CI에서 bootJar 빌드 후 Docker는 build/libs/*.jar 만 필요 — 소스/캐시 제외
+
+.gradle
+**/src/
+
+**/build/classes/
+**/build/kotlin/
+**/build/generated/
+**/build/tmp/
+**/build/reports/
+**/build/test-results/
+**/build/resources/
+
+.git
+.github
+.idea
+.vscode
+*.iml
+
+*.md
+.env
+.env.*
+*.local.*
+
+Containerfile
+.dockerignore

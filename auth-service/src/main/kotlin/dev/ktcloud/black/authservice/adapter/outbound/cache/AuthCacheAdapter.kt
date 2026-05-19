@@ -12,16 +12,18 @@ class AuthCacheAdapter(
     private val redisTemplate: StringRedisTemplate,
 ) : AuthCacheQueryPort, AuthCacheCommandPort {
 
-    private fun key(userId: UUID) = "refresh:$userId"
-
     override fun getRefreshToken(userId: UUID): String? =
-        redisTemplate.opsForValue().get(key(userId))
+        redisTemplate.opsForValue().get(AuthRefreshTokenRedisKey(userId).toRedisKey())
 
     override fun saveRefreshToken(userId: UUID, refreshToken: String, ttlSeconds: Long) {
-        redisTemplate.opsForValue().set(key(userId), refreshToken, Duration.ofSeconds(ttlSeconds))
+        redisTemplate.opsForValue().set(
+            AuthRefreshTokenRedisKey(userId).toRedisKey(),
+            refreshToken,
+            Duration.ofSeconds(ttlSeconds),
+        )
     }
 
     override fun deleteRefreshToken(userId: UUID) {
-        redisTemplate.delete(key(userId))
+        redisTemplate.delete(AuthRefreshTokenRedisKey(userId).toRedisKey())
     }
 }
