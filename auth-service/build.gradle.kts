@@ -35,6 +35,21 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 }
 
+tasks.bootJar {
+    archiveFileName.set("auth-service.jar")
+}
+
+sourceSets {
+    getByName("main") {
+        java {
+            srcDirs(
+                "build/generated/source/proto/main/java",
+                "build/generated/source/proto/main/grpc",
+            )
+        }
+    }
+}
+
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:3.25.3" }
     plugins {
