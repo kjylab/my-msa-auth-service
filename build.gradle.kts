@@ -37,6 +37,12 @@ subprojects {
         imports {
             mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.5")
         }
+        dependencies {
+            dependency("org.jetbrains.kotlin:kotlin-reflect:2.3.20")
+            dependency("org.jetbrains.kotlin:kotlin-stdlib:2.3.20")
+            dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.20")
+            dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.3.20")
+        }
     }
 
     dependencies {
