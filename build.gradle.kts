@@ -60,7 +60,8 @@ sonar {
     properties {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.organization", "kjylab")
-        property("sonar.projectKey", "kjylab_my-msa-auth-service")
+        property("sonar.projectName", "my-msa-auth-service")
+		property("sonar.projectKey", "kjylab_my-msa-auth-service")
         property("sonar.qualitygate.wait", "false")
         property("sonar.coverage.jacoco.xmlReportPaths", "**/build/reports/jacoco/test/jacocoTestReport.xml")
         property("sonar.exclusions", "**/generated/**, **/build/**")
