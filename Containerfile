@@ -9,6 +9,7 @@ RUN java -Djarmode=layertools -jar app.jar extract
 
 # ===== Stage 2: runtime =====
 FROM eclipse-temurin:21-jre-alpine
+RUN apk upgrade --no-cache
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 WORKDIR /app
